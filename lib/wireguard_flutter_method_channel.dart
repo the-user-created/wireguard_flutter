@@ -1,5 +1,4 @@
 import 'package:flutter/services.dart';
-
 import 'wireguard_flutter_platform_interface.dart';
 
 class WireGuardFlutterMethodChannel extends WireGuardFlutterInterface {
