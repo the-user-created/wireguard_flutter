@@ -163,12 +163,12 @@ class WireguardFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 checkPermission()
                 result.success(null)
             }
-            "getDownloadData" -> {
+            /*"getDownloadData" -> {
                 getDownloadData(result)
             }
             "getUploadData" -> {
                 getUploadData(result)
-            }
+            }*/
             else -> flutterNotImplemented(result)
         }
     }
@@ -290,7 +290,7 @@ class WireguardFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         }
     }
 
-    private fun getDownloadData(result: Result) {
+    /*private fun getDownloadData(result: Result) {
         scope.launch(Dispatchers.IO) {
             try {
                 val downloadData = futureBackend.await().getTransferData(tunnel(tunnelName)).rxBytes
@@ -312,7 +312,7 @@ class WireguardFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 flutterError(result, e.message.toString())
             }
         }
-    }
+    }*/
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
