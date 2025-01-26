@@ -56,4 +56,10 @@ class WireGuardFlutterMethodChannel extends WireGuardFlutterInterface {
               )
             : VpnStage.disconnected,
       );
+
+  @override
+  Future<bool> checkPermission() async {
+    final result = await _methodChannel.invokeMethod("checkPermission");
+    return result as bool? ?? false;
+  }
 }

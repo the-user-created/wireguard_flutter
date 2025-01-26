@@ -79,18 +79,6 @@ public class WireguardFlutterPlugin: NSObject, FlutterPlugin {
         }
     }
     
-    private func getDownloadData(result: @escaping FlutterResult) {
-        WireguardFlutterPlugin.utils.getTransferData { downloadData, _ in
-            result(downloadData)
-        }
-    }
-    
-    private func getUploadData(result: @escaping FlutterResult) {
-        WireguardFlutterPlugin.utils.getTransferData { _, uploadData in
-            result(uploadData)
-        }
-    }
-    
     class VPNConnectionHandler: NSObject, FlutterStreamHandler {
         private var vpnConnection: FlutterEventSink?
         private var vpnConnectionObserver: NSObjectProtocol?
@@ -276,35 +264,4 @@ class VPNUtils {
             }
         }
     }
-    
-    func getTransferData(completion: @escaping (UInt64?, UInt64?) -> Void) {
-        NETunnelProviderManager.loadAllFromPreferences { managers, error in
-            guard let manager = managers?.first else {
-                completion(nil, nil)
-                return
-            }
-            
-            guard let session = manager.connection as? NETunnelProviderSession else {
-                completion(nil, nil)
-                return
-            }
-            
-            do {
-                try session.sendProviderMessage("getTransferData".data(using: .utf8)!) { response in
-                    guard let response = response, response.count == 16 else {
-                        completion(nil, nil)
-                        return
-                    }
-                    
-                    let downloadData = response.withUnsafeBytes { $0.load(as: UInt64.self) }
-                    let uploadData = response.advanced(by: 8).withUnsafeBytes { $0.load(as: UInt64.self) }
-                    completion(downloadData, uploadData)
-                }
-            } catch {
-                NSLog("Error (sendProviderMessage): \(error)")
-                completion(nil, nil)
-            }
-        }
-    }
-
 }

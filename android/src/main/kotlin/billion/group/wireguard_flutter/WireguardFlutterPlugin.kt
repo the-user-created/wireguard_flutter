@@ -50,6 +50,7 @@ class WireguardFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     private var config: com.wireguard.config.Config? = null
     private var tunnel: WireGuardTunnel? = null
     private val TAG = "NVPN"
+    private var permissionResult: Result? = null
     var isVpnChecked = false
     companion object {
         private var state: String = "no_connection"
@@ -59,13 +60,19 @@ class WireguardFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         }
     }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
-        this.havePermission =
-            (requestCode == PERMISSIONS_REQUEST_CODE) && (resultCode == Activity.RESULT_OK)
-        return havePermission
+        if (requestCode == PERMISSIONS_REQUEST_CODE) {
+            val granted = resultCode == Activity.RESULT_OK
+            havePermission = granted
+            permissionResult?.success(granted)
+            permissionResult = null
+            return true
+        }
+        return false
     }
 
     override fun onAttachedToActivity(activityPluginBinding: ActivityPluginBinding) {
         this.activity = activityPluginBinding.activity as FlutterActivity
+        activityPluginBinding.addActivityResultListener(this)
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
@@ -160,15 +167,19 @@ class WireguardFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 result.success(getStatus())
             }
             "checkPermission" -> {
-                checkPermission()
-                result.success(null)
+                if (havePermission) {
+                    result.success(true)
+                } else {
+                    val intent = GoBackend.VpnService.prepare(this.activity)
+                    if (intent != null) {
+                        permissionResult = result
+                        this.activity?.startActivityForResult(intent, PERMISSIONS_REQUEST_CODE)
+                    } else {
+                        havePermission = true
+                        result.success(true)
+                    }
+                }
             }
-            /*"getDownloadData" -> {
-                getDownloadData(result)
-            }
-            "getUploadData" -> {
-                getUploadData(result)
-            }*/
             else -> flutterNotImplemented(result)
         }
     }
@@ -280,39 +291,17 @@ class WireguardFlutterPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         }
     }
 
-    private fun checkPermission() {
+    private fun checkPermission(): Boolean {
         val intent = GoBackend.VpnService.prepare(this.activity)
-        if (intent != null) {
+        return if (intent != null) {
             havePermission = false
             this.activity?.startActivityForResult(intent, PERMISSIONS_REQUEST_CODE)
+            false
         } else {
             havePermission = true
+            true
         }
     }
-
-    /*private fun getDownloadData(result: Result) {
-        scope.launch(Dispatchers.IO) {
-            try {
-                val downloadData = futureBackend.await().getTransferData(tunnel(tunnelName)).rxBytes
-                flutterSuccess(result, downloadData)
-            } catch (e: Throwable) {
-                Log.e(TAG, "getDownloadData - ERROR - ${e.message}")
-                flutterError(result, e.message.toString())
-            }
-        }
-    }
-
-    private fun getUploadData(result: Result) {
-        scope.launch(Dispatchers.IO) {
-            try {
-                val uploadData = futureBackend.await().getTransferData(tunnel(tunnelName)).txBytes
-                flutterSuccess(result, uploadData)
-            } catch (e: Throwable) {
-                Log.e(TAG, "getUploadData - ERROR - ${e.message}")
-                flutterError(result, e.message.toString())
-            }
-        }
-    }*/
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
