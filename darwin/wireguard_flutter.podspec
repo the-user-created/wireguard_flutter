@@ -16,14 +16,12 @@ Wireguard flutter SDK for iOS/macOS
   s.source = { :path => "." }
   s.source_files = "Classes/**/*"
 
-#   s.platform = :ios, "15.0"
+  s.platform = :ios, "15.0"
 
   s.pod_target_xcconfig = { "DEFINES_MODULE" => "YES", "EXCLUDED_ARCHS[sdk=iphonesimulator*]" => "i386" }
   s.swift_version = "5.7"
 
   s.ios.dependency "Flutter"
-  s.osx.dependency "FlutterMacOS"
   s.ios.deployment_target = "15.0"
-  s.osx.deployment_target = "12.0"
 
 end
